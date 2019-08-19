@@ -3,30 +3,54 @@ package main
 import (
 	"bufio"
 	"compress/gzip"
-	"flag"
-	"fmt"
-	"io/ioutil"
+	"io"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 )
 
-func main() {
-	sourcePathPtr := flag.String("source", ".", "source dir containing files to be compressed")
-	targetPathPtr := flag.String("target", ".", "target dir to put compressed files in")
+func compressFile(sourceFileFullPath string, targetFileFullPath string, mode os.FileMode) error {
+	originalFile, _ := os.Open(sourceFileFullPath)
+	defer originalFile.Close()
 
-	flag.Parse()
+	reader := bufio.NewReader(originalFile)
 
-	if _, err := os.Stat(*sourcePathPtr); os.IsNotExist(err) {
-		panic("source folder doesn't exist")
+	buffer := make([]byte, 1024)
+
+	gzFile, err := os.OpenFile(targetFileFullPath, os.O_CREATE|os.O_WRONLY, mode)
+
+	if err != nil {
+		return err
 	}
 
-	var targetPath string = *targetPathPtr
+	defer gzFile.Close()
 
-	filepath.Walk(*sourcePathPtr, func(fileFullPath string, info os.FileInfo, err error) error {
+	writer := gzip.NewWriter(gzFile)
+	defer writer.Close()
+
+	for {
+		num, err := reader.Read(buffer)
+		if num != 0 {
+			writer.Write(buffer[:num])
+		}
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			log.Fatal(err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func compress(sourcePath string, targetPath string) {
+	filepath.Walk(sourcePath, func(fileFullPath string, info os.FileInfo, err error) error {
 		if info.IsDir() {
-			fmt.Println("Skipping folder")
+			log.Println("Skipping folder")
 			if _, err := os.Stat(targetPath); os.IsNotExist(err) {
 				os.Mkdir(targetPath, info.Mode())
 			}
@@ -34,36 +58,23 @@ func main() {
 		}
 
 		if strings.HasSuffix(fileFullPath, ".gz") {
-			fmt.Println("Already a gz file. Ignoring.")
+			log.Println("Already a gz file. Ignoring.")
 			return nil
 		}
 
-		filename := fileFullPath
 		gzedFilename := path.Join(targetPath, info.Name()+".gz")
 
 		if _, err := os.Stat(gzedFilename); os.IsNotExist(err) {
-			fmt.Println("Let's create the gz file for " + fileFullPath)
-			fmt.Println("New file name: " + gzedFilename)
+			log.Println("Let's create the gz file for " + fileFullPath)
+			log.Println("New file name: " + gzedFilename)
 
-			originalFile, _ := os.Open(filename)
-			defer originalFile.Close()
+			err = compressFile(fileFullPath, gzedFilename, info.Mode())
 
-			reader := bufio.NewReader(originalFile)
-			content, _ := ioutil.ReadAll(reader)
-
-			gzFile, err := os.OpenFile(gzedFilename, os.O_CREATE, info.Mode())
 			if err != nil {
 				panic(err)
 			}
-
-			defer gzFile.Close()
-
-			writer := gzip.NewWriter(gzFile)
-			defer writer.Close()
-
-			writer.Write(content)
 		} else {
-			fmt.Println(gzedFilename + " already exists")
+			log.Println(gzedFilename + " already exists")
 		}
 
 		return nil
