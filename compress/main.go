@@ -2,12 +2,14 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
 )
 
 func main() {
 	sourcePathPtr := flag.String("source", "", "source dir containing files to be compressed")
 	targetPathPtr := flag.String("target", ".", "target dir to put compressed files in")
+	parallelPtr := flag.Bool("parallel", false, "run compress in parallel")
 
 	flag.Parse()
 
@@ -19,7 +21,9 @@ func main() {
 		panic("source folder doesn't exist")
 	}
 
-	var targetPath string = *targetPathPtr
+	if *parallelPtr {
+		log.Println("Running in parallel mode")
+	}
 
-	compress(*sourcePathPtr, targetPath)
+	compress(*sourcePathPtr, *targetPathPtr, *parallelPtr)
 }

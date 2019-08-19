@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 func compressFile(sourceFileFullPath string, targetFileFullPath string, mode os.FileMode) error {
@@ -47,7 +48,10 @@ func compressFile(sourceFileFullPath string, targetFileFullPath string, mode os.
 	return nil
 }
 
-func compress(sourcePath string, targetPath string) {
+func compress(sourcePath string, targetPath string, parallel bool) {
+
+	var waitGroup sync.WaitGroup
+
 	filepath.Walk(sourcePath, func(fileFullPath string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			log.Println("Skipping folder")
@@ -68,10 +72,23 @@ func compress(sourcePath string, targetPath string) {
 			log.Println("Let's create the gz file for " + fileFullPath)
 			log.Println("New file name: " + gzedFilename)
 
-			err = compressFile(fileFullPath, gzedFilename, info.Mode())
+			if !parallel {
+				err = compressFile(fileFullPath, gzedFilename, info.Mode())
 
-			if err != nil {
-				panic(err)
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				waitGroup.Add(1)
+				go func(waiter *sync.WaitGroup) {
+					err = compressFile(fileFullPath, gzedFilename, info.Mode())
+
+					if err != nil {
+						panic(err)
+					}
+
+					waiter.Done()
+				}(&waitGroup)
 			}
 		} else {
 			log.Println(gzedFilename + " already exists")
@@ -79,4 +96,6 @@ func compress(sourcePath string, targetPath string) {
 
 		return nil
 	})
+
+	waitGroup.Wait()
 }
