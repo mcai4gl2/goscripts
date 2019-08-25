@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/mcai4gl2/goscripts/compressutil"
