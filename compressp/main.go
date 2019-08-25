@@ -99,7 +99,7 @@ func compress(sourcePath string, targetPath string, parallel int) {
 func main() {
 	sourcePathPtr := flag.String("source", "", "source dir containing files to be compressed")
 	targetPathPtr := flag.String("target", ".", "target dir to put compressed files in")
-	parallelPtr := flag.Int("parallel", 1, "max number of concurrent go routine to compress")
+	parallelPtr := flag.Int("parallel", 10, "max number of concurrent go routine to compress")
 
 	flag.Parse()
 
