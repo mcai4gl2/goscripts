@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/mcai4gl2/goscripts/util"
 )
@@ -44,4 +46,22 @@ func getAllHKEXTickers(tickerFileFullPath string, tickerColumnName string) <-cha
 	}()
 
 	return tickers
+}
+
+func parseDateString(date string) (time.Time, error) {
+	layout := "20060102"
+	return time.Parse(layout, date)
+}
+
+func formatUrl(ticker string, startDate string, endDate string) (string, error) {
+	start, err := parseDateString(startDate)
+	if err != nil {
+		return "", err
+	}
+	end, err := parseDateString(endDate)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("https://finance.yahoo.com/quote/%s/history?period1=%d&period2=%d&interval=1d&filter=history&frequency=1d",
+		ticker, start.Unix(), end.Unix()), nil
 }
