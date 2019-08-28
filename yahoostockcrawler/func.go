@@ -5,8 +5,11 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/mcai4gl2/goscripts/util"
@@ -64,4 +67,24 @@ func formatUrl(ticker string, startDate string, endDate string) (string, error) 
 	}
 	return fmt.Sprintf("https://finance.yahoo.com/quote/%s/history?period1=%d&period2=%d&interval=1d&filter=history&frequency=1d",
 		ticker, start.Unix(), end.Unix()), nil
+}
+
+func getUrl(url string) string {
+	var netClient = &http.Client{
+		Timeout: time.Second * 10,
+	}
+
+	response, _ := netClient.Get(url)
+
+	defer response.Body.Close()
+
+	body, _ := ioutil.ReadAll(response.Body)
+	bodyStr := string(body)
+
+	bodyStr = bodyStr[strings.Index(bodyStr, "HistoricalPriceStore"):]
+
+	bodyStr = bodyStr[0 : strings.Index(bodyStr, "]")+1]
+	bodyStr = bodyStr[strings.Index(bodyStr, "["):]
+
+	return bodyStr
 }
