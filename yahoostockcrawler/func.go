@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -87,4 +88,28 @@ func getUrl(url string) string {
 	bodyStr = bodyStr[strings.Index(bodyStr, "["):]
 
 	return bodyStr
+}
+
+func getFullOutputFileName(ticker string, startDate string, endDate string,
+	outputDir string) string {
+	return path.Join(outputDir,
+		fmt.Sprintf("%s_%s_%s.json", ticker, startDate, endDate))
+}
+
+func writeToFile(ticker string, startDate string, endDate string,
+	outputDir string, content string) error {
+	fullOutputFileName := getFullOutputFileName(ticker, startDate,
+		endDate, outputDir)
+
+	file, err := os.Create(fullOutputFileName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = io.WriteString(file, content)
+	if err != nil {
+		return err
+	}
+	return file.Sync()
 }
