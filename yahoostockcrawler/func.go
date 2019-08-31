@@ -96,11 +96,7 @@ func getFullOutputFileName(ticker string, startDate string, endDate string,
 		fmt.Sprintf("%s_%s_%s.json", ticker, startDate, endDate))
 }
 
-func writeToFile(ticker string, startDate string, endDate string,
-	outputDir string, content string) error {
-	fullOutputFileName := getFullOutputFileName(ticker, startDate,
-		endDate, outputDir)
-
+func writeToFile(fullOutputFileName string, content string) error {
 	file, err := os.Create(fullOutputFileName)
 	if err != nil {
 		return err
