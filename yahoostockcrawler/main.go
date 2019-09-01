@@ -4,8 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"sync"
+	"time"
 )
 
 type CrawlWork struct {
@@ -21,15 +23,16 @@ type SaveWork struct {
 }
 
 func getPricesForAllTickers(tickerFile string, startDate string, endDate string,
-	ouputDir string, crawlParallel int, saveParallel int) {
+	ouputDir string, crawlParallel int, saveParallel int, oneTickerFilter string) {
 	saveChan := make(chan SaveWork)
+	rand.Seed(time.Now().UnixNano())
 
 	tickerChan := func() <-chan CrawlWork {
 		tickerChan := make(chan CrawlWork)
 		go func() {
 			tickers := getAllHKEXTickers(tickerFile, "ticker")
 			for ticker := range tickers {
-				if ticker != "6862.HK" {
+				if oneTickerFilter != "" && ticker != oneTickerFilter {
 					continue
 				}
 				outputFileName := getFullOutputFileName(ticker, startDate, endDate, ouputDir)
@@ -52,8 +55,12 @@ func getPricesForAllTickers(tickerFile string, startDate string, endDate string,
 					url, _ := formatUrl(work.ticker, work.startDate, work.endDate)
 					log.Println(fmt.Sprintf("Calling url: %s", url))
 					data := getUrl(url)
+					if data == "" {
+						log.Println(fmt.Sprintf("Failing to get data for ticker %s", work.ticker))
+					}
 					log.Println("Got data, scheduling save work")
 					outputChan <- SaveWork{work.outputFileName, data}
+					time.Sleep(time.Duration(rand.Intn(6)) * time.Second)
 				}
 				close(outputChan)
 			}()
@@ -100,6 +107,7 @@ func main() {
 	outputDir := flag.String("output", "", "Result output directory")
 	webParallelPtr := flag.Int("webParallel", 10, "Number of concurrent go routine to crawl from yahoo")
 	diskParallelPtr := flag.Int("diskParallel", 4, "Number of concurrent go routine to save results to disk")
+	oneTickerPtr := flag.String("filter", "", "One ticker to filter on")
 
 	flag.Parse()
 
@@ -120,5 +128,5 @@ func main() {
 	}
 
 	getPricesForAllTickers(*tickerFilePtr, *startDatePtr, *endDatePtr,
-		*outputDir, *webParallelPtr, *diskParallelPtr)
+		*outputDir, *webParallelPtr, *diskParallelPtr, *oneTickerPtr)
 }

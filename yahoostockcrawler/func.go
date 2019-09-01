@@ -71,6 +71,12 @@ func formatUrl(ticker string, startDate string, endDate string) (string, error) 
 }
 
 func getUrl(url string) string {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println(fmt.Sprintf("Failed process url: %s with error %s", url, r))
+		}
+	}()
+
 	var netClient = &http.Client{
 		Timeout: time.Second * 10,
 	}
