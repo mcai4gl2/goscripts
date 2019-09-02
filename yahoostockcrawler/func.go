@@ -70,10 +70,12 @@ func formatUrl(ticker string, startDate string, endDate string) (string, error) 
 		ticker, start.Unix(), end.Unix()), nil
 }
 
-func getUrl(url string) string {
+func getUrl(url string) (data string, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Println(fmt.Sprintf("Failed process url: %s with error %s", url, r))
+			data = ""
+			err = r.(error)
 		}
 	}()
 
@@ -91,9 +93,11 @@ func getUrl(url string) string {
 	bodyStr = bodyStr[strings.Index(bodyStr, "HistoricalPriceStore"):]
 
 	bodyStr = bodyStr[0 : strings.Index(bodyStr, "]")+1]
-	bodyStr = bodyStr[strings.Index(bodyStr, "["):]
 
-	return bodyStr
+	data = bodyStr[strings.Index(bodyStr, "["):]
+	err = nil
+
+	return
 }
 
 func getFullOutputFileName(ticker string, startDate string, endDate string,

@@ -54,12 +54,14 @@ func getPricesForAllTickers(tickerFile string, startDate string, endDate string,
 				for work := range tickerChan {
 					url, _ := formatUrl(work.ticker, work.startDate, work.endDate)
 					log.Println(fmt.Sprintf("Calling url: %s", url))
-					data := getUrl(url)
-					if data == "" {
-						log.Println(fmt.Sprintf("Failing to get data for ticker %s", work.ticker))
+					data, err := getUrl(url)
+					if err != nil {
+						log.Println(fmt.Sprintf("Failing to get data for ticker %s with error %s",
+							work.ticker, err))
+					} else {
+						log.Println("Got data, scheduling save work")
+						outputChan <- SaveWork{work.outputFileName, data}
 					}
-					log.Println("Got data, scheduling save work")
-					outputChan <- SaveWork{work.outputFileName, data}
 					time.Sleep(time.Duration(rand.Intn(6)) * time.Second)
 				}
 				close(outputChan)
@@ -88,7 +90,10 @@ func getPricesForAllTickers(tickerFile string, startDate string, endDate string,
 			defer saveWaitGroup.Done()
 			for saveWork := range saveChan {
 				log.Println(fmt.Sprintf("Saving result to file: %s", saveWork.outputFileName))
-				writeToFile(saveWork.outputFileName, saveWork.data)
+				err := writeToFile(saveWork.outputFileName, saveWork.data)
+				if err != nil {
+					log.Println(fmt.Sprintf("Failing to save results to file: %s", err))
+				}
 			}
 		}()
 	}
