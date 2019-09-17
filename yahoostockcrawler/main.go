@@ -8,6 +8,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/mcai4gl2/goscripts/commoncrawl"
 )
 
 type CrawlWork struct {
@@ -30,7 +32,7 @@ func getPricesForAllTickers(tickerFile string, startDate string, endDate string,
 	tickerChan := func() <-chan CrawlWork {
 		tickerChan := make(chan CrawlWork)
 		go func() {
-			tickers := getAllHKEXTickers(tickerFile, "ticker")
+			tickers := crawl.GetAllTickers(tickerFile, "ticker")
 			for ticker := range tickers {
 				if oneTickerFilter != "" && ticker != oneTickerFilter {
 					continue
