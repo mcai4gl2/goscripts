@@ -13,3 +13,7 @@ Similar to compress, but this version uses fixed number of go routines instead o
 ### yahoostockcrawler
 
 Script to download stock prices from yahoo finance. This script extracts the json data. It can be then directly loaded into pandas in python.
+
+### yahoostockprofile
+
+Script to download stock's sector and industry from yahoo finance. This script saves the extracted  data in a CSV format.
