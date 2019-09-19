@@ -38,6 +38,7 @@ func getStockProfileForAllTickers(tickerFileName string, outputFileName string, 
 				data, err := getData(ticker, url)
 				result := extractData(ticker, data, err)
 				saveChan <- result
+				time.Sleep(time.Duration(rand.Intn(6)) * time.Second)
 			}
 		}(i)
 	}
@@ -54,12 +55,17 @@ func getStockProfileForAllTickers(tickerFileName string, outputFileName string, 
 		writer := csv.NewWriter(file)
 		defer writer.Flush()
 
-		writer.Write([]string{"ticker", "sector", "industry"})
+		header := []string{"ticker", "name", "sector", "industry"}
+		writer.Write(header)
 
 		for result := range saveChan {
-			log.Println(fmt.Sprintf("Ticker: %s, Sector: %s, Industry: %s",
-				result.ticker, result.sector, result.industry))
-			writer.Write([]string{result.ticker, result.sector, result.industry})
+			log.Println(fmt.Sprintf("Ticker: %s, Name: %s, Sector: %s, Industry: %s",
+				result.ticker, result.data["name"],
+				result.data["sector"], result.data["industry"]))
+			writer.Write([]string{result.ticker,
+				result.data["name"],
+				result.data["sector"],
+				result.data["industry"]})
 		}
 	}()
 
@@ -73,7 +79,7 @@ func getStockProfileForAllTickers(tickerFileName string, outputFileName string, 
 func main() {
 	tickerFilePtr := flag.String("ticker", "", "Ticker input file")
 	outputFilePrt := flag.String("output", "", "Full path to output file")
-	webParallelPtr := flag.Int("webParallel", 10, "Number of concurrent go routine to crawl from yahoo")
+	webParallelPtr := flag.Int("webParallel", 5, "Number of concurrent go routine to crawl from yahoo")
 
 	flag.Parse()
 

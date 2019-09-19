@@ -18,8 +18,8 @@ func TestExtractData(t *testing.T) {
 	</html>
 	`
 	result := extractData("0700.HK", data, nil)
-	assert.Equal(t, "TestSector", result.sector)
-	assert.Equal(t, "Test Industry", result.industry)
+	assert.Equal(t, "TestSector", result.data["sector"])
+	assert.Equal(t, "Test Industry", result.data["industry"])
 	assert.Nil(t, result.err)
 }
 
@@ -27,8 +27,8 @@ func TestExtractDataWithError(t *testing.T) {
 	err := errors.New("Create Error")
 	result := extractData("0700.HK", "", err)
 	assert.Equal(t, "0700.HK", result.ticker)
-	assert.Equal(t, "", result.sector)
-	assert.Equal(t, "", result.industry)
+	assert.Equal(t, "", result.data["sector"])
+	assert.Equal(t, "", result.data["industry"])
 	assert.Same(t, err, result.err)
 }
 
@@ -38,8 +38,8 @@ func TestExtractDataWithNoSectorOrIndustry(t *testing.T) {
 	</html>
 	`
 	result := extractData("0700.HK", data, nil)
-	assert.Equal(t, "", result.sector)
-	assert.Equal(t, "", result.industry)
+	assert.Equal(t, "", result.data["sector"])
+	assert.Equal(t, "", result.data["industry"])
 	assert.Nil(t, result.err)
 }
 
@@ -50,8 +50,8 @@ func TestExtractDataWithSectorOnly(t *testing.T) {
 	</html>
 	`
 	result := extractData("0700.HK", data, nil)
-	assert.Equal(t, "TestSector", result.sector)
-	assert.Equal(t, "", result.industry)
+	assert.Equal(t, "TestSector", result.data["sector"])
+	assert.Equal(t, "", result.data["industry"])
 	assert.Nil(t, result.err)
 }
 
@@ -62,7 +62,7 @@ func TestExtractDataWithIndustryOnly(t *testing.T) {
 	</html>
 	`
 	result := extractData("0700.HK", data, nil)
-	assert.Equal(t, "", result.sector)
-	assert.Equal(t, "Test Industry", result.industry)
+	assert.Equal(t, "", result.data["sector"])
+	assert.Equal(t, "Test Industry", result.data["industry"])
 	assert.Nil(t, result.err)
 }
