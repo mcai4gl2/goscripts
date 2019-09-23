@@ -17,3 +17,9 @@ Script to download stock prices from yahoo finance. This script extracts the jso
 ### yahoostockprofile
 
 Script to download stock's sector and industry from yahoo finance. This script saves the extracted  data in a CSV format.
+
+### echo & maninthemiddle
+
+Echo is a simple echo server. maninthemiddle opens two tcp connections: local and remote and forward data between two connections.
+
+To play with both, start echo first and then start maninthemiddle using echo server's port as peer. Then connect to maninthemiddle via telnet.
